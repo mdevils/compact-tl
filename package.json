@@ -1,0 +1,27 @@
+{
+  "name": "compact-tl",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run-script jshint && npm run-script check-style && npm run-script unit-tests",
+    "jshint": "jshint .",
+    "unit-tests": "mocha -u bdd -R spec --recursive test",
+    "check-style": "jscs lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mdevils/compact-tl.git"
+  },
+  "author": "Marat Dulin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mdevils/compact-tl/issues"
+  },
+  "homepage": "https://github.com/mdevils/compact-tl",
+  "devDependencies": {
+    "jscs": "~1.2.4",
+    "mocha": "~1.17.0",
+    "chai": "~1.8.1",
+    "jshint": "~2.4.2"
+  }
+}
