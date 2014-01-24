@@ -45,5 +45,7 @@ describe('Compiler', function () {
             .should.equal('function(params){return (params.x?"1":"2");}');
         compiler.compile(astBuilder.build(new Parser('{{#if x}}1{{/if}}')))
             .should.equal('function(params){return (params.x?"1":"");}');
+        compiler.compile(astBuilder.build(new Parser('{{#if x}}{{else}}2{{/if}}')))
+            .should.equal('function(params){return (params.x?"":"2");}');
     });
 });
