@@ -14,6 +14,12 @@ describe('Compiler', function () {
         compiler.compile((new AstBuilder()).build(new Parser('Hello World')))
             .should.equal('"Hello World"');
     });
+    it('should simplify empty strings', function () {
+        var compiler = new Compiler();
+        compiler.setStringResultHandler(JSON.stringify.bind(JSON));
+        compiler.compile((new AstBuilder()).build(new Parser('')))
+            .should.equal('""');
+    });
     it('should process variables', function () {
         (new Compiler()).compile((new AstBuilder()).build(new Parser('{{x}}')))
             .should.equal('function(params){return params.x;}');
