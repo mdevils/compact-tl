@@ -20,6 +20,17 @@ describe('Parser', function () {
         parser.next();
         parser.getToken().type.should.equal(Parser.TOKEN_EOF);
     });
+    it('should parse number', function () {
+        var parser = new Parser('{{123}}');
+        parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+        parser.next();
+        parser.getToken().type.should.equal(Parser.TOKEN_NUMBER);
+        parser.getToken().value.should.equal('123');
+        parser.next();
+        parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+        parser.next();
+        parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+    });
     it('should parse mixed variable and text', function () {
         var parser = new Parser('Hello, {{variableName_1}}!');
         parser.getToken().type.should.equal(Parser.TOKEN_TEXT);
@@ -60,7 +71,7 @@ describe('Parser', function () {
         parser.getToken().type.should.equal(Parser.TOKEN_EOF);
     });
     it('should parse expression with parameters', function () {
-        var parser = new Parser('{{exec var1 "Hello" param1=var2 param2="World!"}}');
+        var parser = new Parser('{{exec var1 "Hello" 234 param1=var2 param2="World!"}}');
         parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
         parser.next();
         parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
@@ -71,6 +82,9 @@ describe('Parser', function () {
         parser.next();
         parser.getToken().type.should.equal(Parser.TOKEN_STRING);
         parser.getToken().value.should.equal('Hello');
+        parser.next();
+        parser.getToken().type.should.equal(Parser.TOKEN_NUMBER);
+        parser.getToken().value.should.equal('234');
         parser.next();
         parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
         parser.getToken().value.should.equal('param1');
@@ -116,4 +130,109 @@ describe('Parser', function () {
         parser.next();
         parser.getToken().type.should.equal(Parser.TOKEN_EOF);
     });
+    describe('logical', function () {
+        it('should parse >', function () {
+            var parser = new Parser('{{a>b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('>');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+        it('should parse >=', function () {
+            var parser = new Parser('{{a>=b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('>=');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+        it('should parse <', function () {
+            var parser = new Parser('{{a < b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('<');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+        it('should parse <=', function () {
+            var parser = new Parser('{{a <= b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('<=');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+        it('should parse ==', function () {
+            var parser = new Parser('{{a == b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('==');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+        it('should parse !=', function () {
+            var parser = new Parser('{{a != b}}');
+            parser.getToken().type.should.equal(Parser.TOKEN_BEGIN_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('a');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_OPERATOR);
+            parser.getToken().value.should.equal('!=');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_IDENTIFIER);
+            parser.getToken().value.should.equal('b');
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_END_EXPRESSION);
+            parser.next();
+            parser.getToken().type.should.equal(Parser.TOKEN_EOF);
+        });
+    });
+
 });

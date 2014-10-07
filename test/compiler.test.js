@@ -24,6 +24,18 @@ describe('Compiler', function () {
         (new Compiler()).compile((new AstBuilder()).build(new Parser('{{x}}')))
             .should.equal('function(params){return params.x;}');
     });
+    it('should process strings', function () {
+        (new Compiler()).compile((new AstBuilder()).build(new Parser('{{"x"}}')))
+            .should.equal('function(params){return "x";}');
+    });
+    it('should process numbers', function () {
+        (new Compiler()).compile((new AstBuilder()).build(new Parser('{{123}}')))
+            .should.equal('function(params){return 123;}');
+    });
+    it('should process logical expressions', function () {
+        (new Compiler()).compile((new AstBuilder()).build(new Parser('{{x > y}}')))
+            .should.equal('function(params){return (params.x>params.y);}');
+    });
     it('should process calls', function () {
         var compiler = new Compiler();
         compiler.registerHelper('tos', function (ast, compiler) {
@@ -31,6 +43,14 @@ describe('Compiler', function () {
         });
         compiler.compile((new AstBuilder()).build(new Parser('{{tos x}}')))
             .should.equal('function(params){return (\'\'+params.x);}');
+    });
+    it('should process logicals in calls', function () {
+        var compiler = new Compiler();
+        compiler.registerHelper('tos', function (ast, compiler) {
+            return '(\'\'+' + compiler.generateExpression(ast.arguments.list[0]) + ')';
+        });
+        compiler.compile((new AstBuilder()).build(new Parser('{{tos x > y}}')))
+            .should.equal('function(params){return (\'\'+(params.x>params.y));}');
     });
     it('should process sections', function () {
         (new Compiler()).compile((new AstBuilder()).build(new Parser('before{{x}}after')))
@@ -53,5 +73,16 @@ describe('Compiler', function () {
             .should.equal('function(params){return (params.x?"1":"");}');
         compiler.compile(astBuilder.build(new Parser('{{#if x}}{{else}}2{{/if}}')))
             .should.equal('function(params){return (params.x?"":"2");}');
+    });
+    it('should process logical expressions in blocks', function () {
+        var compiler = new Compiler();
+        var astBuilder = new AstBuilder();
+        compiler.registerBlockHelper('if', function (ast, compiler) {
+            return '(' + compiler.generateExpression(ast.arguments.list[0]) +
+                '?' + compiler.compileThread(ast.mainSection) +
+                ':"")';
+        });
+        compiler.compile(astBuilder.build(new Parser('{{#if x > y}}1{{/if}}')))
+            .should.equal('function(params){return ((params.x>params.y)?"1":"");}');
     });
 });

@@ -10,12 +10,30 @@ describe('AstBuilder', function () {
         ast.items[0].type.should.equal(AstBuilder.TYPE_TEXT);
         ast.items[0].value.should.equal('Hello World');
     });
-    it('should process expression', function () {
+    it('should process string expressions', function () {
         var ast = (new AstBuilder()).build(new Parser('{{"123"}}'));
         ast.items.length.should.equal(1);
         ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
         ast.items[0].value.type.should.equal(AstBuilder.TYPE_STRING);
         ast.items[0].value.value.should.equal('123');
+    });
+    it('should process numeric expressions', function () {
+        var ast = (new AstBuilder()).build(new Parser('{{123}}'));
+        ast.items.length.should.equal(1);
+        ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+        ast.items[0].value.type.should.equal(AstBuilder.TYPE_NUMBER);
+        ast.items[0].value.value.should.equal('123');
+    });
+    it('should process numeric logical expressions', function () {
+        var ast = (new AstBuilder()).build(new Parser('{{123 > 321}}'));
+        ast.items.length.should.equal(1);
+        ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+        ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+        ast.items[0].value.operator.should.equal('>');
+        ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_NUMBER);
+        ast.items[0].value.left.value.should.equal('123');
+        ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_NUMBER);
+        ast.items[0].value.right.value.should.equal('321');
     });
     it('should process call', function () {
         var ast = (new AstBuilder()).build(new Parser('{{exec "123"}}'));
@@ -25,6 +43,19 @@ describe('AstBuilder', function () {
         ast.items[0].arguments.list.length.should.equal(1);
         ast.items[0].arguments.list[0].type.should.equal(AstBuilder.TYPE_STRING);
         ast.items[0].arguments.list[0].value.should.equal('123');
+        Object.keys(ast.items[0].arguments.hash).length.should.equal(0);
+    });
+    it('should process call with logical arguments', function () {
+        var ast = (new AstBuilder()).build(new Parser('{{exec a > b}}'));
+        ast.items.length.should.equal(1);
+        ast.items[0].type.should.equal(AstBuilder.TYPE_CALL);
+        ast.items[0].name.should.equal('exec');
+        ast.items[0].arguments.list[0].type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+        ast.items[0].arguments.list[0].operator.should.equal('>');
+        ast.items[0].arguments.list[0].left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.list[0].left.name.should.equal('a');
+        ast.items[0].arguments.list[0].right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.list[0].right.name.should.equal('b');
         Object.keys(ast.items[0].arguments.hash).length.should.equal(0);
     });
     it('should process call with hash params', function () {
@@ -144,5 +175,98 @@ describe('AstBuilder', function () {
         ast.items[0].arguments.hash.key.type.should.equal(AstBuilder.TYPE_VARIABLE);
         ast.items[0].arguments.hash.key.name.should.equal('value');
         Object.keys(ast.items[0].arguments.hash).length.should.equal(1);
+    });
+    it('should process block with logical arguments', function () {
+        var ast = (new AstBuilder()).build(new Parser('{{#if param1 > param2 key=value1 > value2}}body{{/if}}'));
+        ast.type.should.equal(AstBuilder.TYPE_ROOT);
+        ast.items.length.should.equal(1);
+        ast.items[0].type.should.equal(AstBuilder.TYPE_BLOCK);
+        ast.items[0].name.should.equal('if');
+        ast.items[0].mainSection.items.length.should.equal(1);
+        ast.items[0].mainSection.items[0].type.should.equal(AstBuilder.TYPE_TEXT);
+        ast.items[0].mainSection.items[0].value.should.equal('body');
+        ast.items[0].sections.length.should.equal(0);
+        ast.items[0].arguments.list.length.should.equal(1);
+        ast.items[0].arguments.list[0].type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+        ast.items[0].arguments.list[0].operator.should.equal('>');
+        ast.items[0].arguments.list[0].left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.list[0].left.name.should.equal('param1');
+        ast.items[0].arguments.list[0].right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.list[0].right.name.should.equal('param2');
+        ast.items[0].arguments.hash.key.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+        ast.items[0].arguments.hash.key.operator.should.equal('>');
+        ast.items[0].arguments.hash.key.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.hash.key.left.name.should.equal('value1');
+        ast.items[0].arguments.hash.key.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+        ast.items[0].arguments.hash.key.right.name.should.equal('value2');
+        Object.keys(ast.items[0].arguments.hash).length.should.equal(1);
+    });
+    describe('logicals', function () {
+        it('should process >', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a > b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('>');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
+        it('should process >=', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a >= b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('>=');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
+        it('should process <', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a < b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('<');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
+        it('should process <=', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a <= b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('<=');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
+        it('should process ==', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a == b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('==');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
+        it('should process !=', function () {
+            var ast = (new AstBuilder()).build(new Parser('{{a != b}}'));
+            ast.items.length.should.equal(1);
+            ast.items[0].type.should.equal(AstBuilder.TYPE_EXPRESSION);
+            ast.items[0].value.type.should.equal(AstBuilder.TYPE_LOGICAL_EXPRESSION);
+            ast.items[0].value.operator.should.equal('!=');
+            ast.items[0].value.left.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.left.name.should.equal('a');
+            ast.items[0].value.right.type.should.equal(AstBuilder.TYPE_VARIABLE);
+            ast.items[0].value.right.name.should.equal('b');
+        });
     });
 });
